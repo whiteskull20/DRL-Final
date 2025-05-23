@@ -43,6 +43,7 @@ def run_random_agent_smac(map_name="2s_vs_1sc", episodes=1, max_steps_per_episod
 
         for e in range(episodes):
             env.reset()
+            print(env.agents[0])
             terminated = False
             episode_reward = 0
             episode_steps = 0
@@ -125,10 +126,10 @@ def run_random_agent_smac(map_name="2s_vs_1sc", episodes=1, max_steps_per_episod
 
 if __name__ == "__main__":
     # --- Configuration ---
-    MAP_NAME = "3m"  # Example map, try "3m", "5m_vs_6m", "MMM" etc.
+    MAP_NAME = "3s5z"  # Example map, try "3m", "5m_vs_6m", "MMM" etc.
                      # Ensure the map is downloaded/available in your SC2 Maps directory.
     NUM_EPISODES = 1
-    MAX_STEPS = 100
+    MAX_STEPS = 1
     RENDER_ENV = False # Set to True to attempt rendering (requires SC2 GUI & correct setup)
     VERBOSE_LOGGING = True # Set to True for step-by-step details
 

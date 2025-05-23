@@ -1,5 +1,26 @@
 import numpy as np
-from unit_dict import unit_id
+from pysc2.lib.units import get_unit_type
+def get_ally_unit_type(env,unit_id):
+    if unit_id == env.marine_id:
+        return "Marine"
+    elif unit_id == env.stalker_id:
+        return "Stalker"
+    elif unit_id == env.zealot_id:
+        return "Zealot"
+    elif unit_id == env.colossus_id:
+        return "Colossus"
+    elif unit_id == env.marauder_id:
+        return "Marauder"
+    elif unit_id == env.medivac_id:
+        return "Medivac"
+    elif unit_id == env.hydralisk_id:
+        return "Hydralisk"
+    elif unit_id == env.baneling_id:
+        return "Baneling"
+    elif unit_id == env.zergling_id:
+        return "Zergling"
+    else:
+        return "Unknown"
 def get_state_NL(env,state):
         """Returns the global state.
         NOTE: This functon should not be used during decentralised execution.
@@ -21,19 +42,18 @@ def get_state_NL(env,state):
             if np.all(feats == 0):
                 s += 'Dead.\n'
                 continue
-            e_dict = {'health':feats[0],'weapon cooldown':feats[1],'x':feats[2],'y':feats[3]}
+            e_dict = {'health':feats[0],'weapon cooldown':feats[1],'x':feats[2],'y':feats[3],'unit':env.agents[e].unit_type}
             ind = 4
             if env.shield_bits_ally > 0:
                 e_dict['shield'] = feats[ind]
                 ind += 1
             if env.unit_type_bits > 0:
-                e_dict['unit'] = feats[ind]
                 ind += 1
             for k,v in e_dict.items():
                 if k == 'health' or k == 'shield' or k == 'weapon cooldown':
                     s += f'{k} : {v*100:.1f}%\n'
                 elif k == 'unit':
-                    s += f'unit type : {unit_id[v]}\n'
+                    s += f'unit type : {get_ally_unit_type(env,v)}\n'
                 elif k == 'x' or k == 'y':
                     s += f'relative {k} : {v:.3f}\n'
         for e in range(enemy_count):
@@ -43,19 +63,16 @@ def get_state_NL(env,state):
             if np.all(feats == 0):
                 s += 'Dead.\n'
                 continue
-            e_dict = {'health':feats[0],'x':feats[1],'y':feats[2]}
+            e_dict = {'health':feats[0],'x':feats[1],'y':feats[2],'unit':env.enemies[e].unit_type}
             ind = 4
             if env.shield_bits_enemy > 0:
                 e_dict['shield'] = feats[ind]
-                ind += 1
-            if env.unit_type_bits > 0:
-                e_dict['unit'] = feats[ind]
                 ind += 1
             for k,v in e_dict.items():
                 if k == 'health' or k == 'shield' or k == 'weapon cooldown':
                     s += f'{k} : {v*100:.1f}%\n'
                 elif k == 'unit':
-                    s += f'unit type : {unit_id[v]}\n'
+                    s += f'unit type : {get_unit_type(v).name}\n'
                 elif k == 'x' or k == 'y':
                     s += f'relative {k} : {v:.3f}\n'
         
@@ -64,7 +81,7 @@ def get_state_NL(env,state):
         if env.state_timestep_number:
             pass
         return s
-def get_obs_agent_NL(env, obs):
+def get_obs_agent_NL(env, obs, agent_id):
         enemy_feats_dim = env.get_obs_enemy_feats_size()
         ally_feats_dim = env.get_obs_ally_feats_size()
         if np.all(obs == 0):
@@ -94,7 +111,7 @@ def get_obs_agent_NL(env, obs):
             if np.all(feats == 0):
                 s += 'Not visible or dead.\n'
                 continue
-            e_dict = {'attack':feats[0],'distance':feats[1],'x':feats[2],'y':feats[3]}
+            e_dict = {'attack':feats[0],'distance':feats[1],'x':feats[2],'y':feats[3],'unit':env.enemies[e].unit_type}
             ind = 4
             if env.obs_all_health:
                 e_dict['health'] = feats[ind]
@@ -103,13 +120,12 @@ def get_obs_agent_NL(env, obs):
                     e_dict['shield'] = feats[ind]
                     ind += 1
                 if env.unit_type_bits > 0:
-                    e_dict['unit'] = feats[ind]
                     ind += 1
             for k,v in e_dict.items():
                 if k == 'health' or k == 'shield':
                     s += f'{k} : {v*100:.1f}%\n'
                 elif k == 'unit':
-                    s += f'unit type : {unit_id[v]}\n'
+                    s += f'unit type : {get_unit_type(v).name}\n'
                 elif k == 'x' or k == 'y':
                     s += f'relative {k} : {v:.3f}\n'
                 elif k == 'distance':
@@ -126,7 +142,7 @@ def get_obs_agent_NL(env, obs):
             if np.all(feats == 0):
                 s += 'Not visible or dead.\n'
                 continue
-            e_dict = {'visible':feats[0],'distance':feats[1],'x':feats[2],'y':feats[3]}
+            e_dict = {'visible':feats[0],'distance':feats[1],'x':feats[2],'y':feats[3],'unit':env.agents[a if a < agent_id else a+1].unit_type}
             ind = 4
             if env.obs_all_health:
                 e_dict['health'] = feats[ind]
@@ -135,7 +151,6 @@ def get_obs_agent_NL(env, obs):
                     e_dict['shield'] = feats[ind]
                     ind += 1
             if env.unit_type_bits > 0:
-                e_dict['unit'] = feats[ind]
                 ind += 1
             #if env.obs_last_action:
             #    if you want...?
@@ -143,7 +158,7 @@ def get_obs_agent_NL(env, obs):
                 if k == 'health' or k == 'shield':
                     s += f'{k} : {v*100:.1f}%\n'
                 elif k == 'unit':
-                    s += f'unit type : {unit_id[v]}\n'
+                    s += f'unit type : {get_ally_unit_type(env,v)}\n'
                 elif k == 'x' or k == 'y':
                     s += f'relative {k} : {v:.3f}\n'
                 elif k == 'distance':
@@ -154,11 +169,10 @@ def get_obs_agent_NL(env, obs):
         # Own features
         s += '\nAgent information:\n'
         if env.obs_own_health:
-            s += f'Health: {100*obs[base_idx]:.1f}%\n'
+            s += f'Health : {100*obs[base_idx]:.1f}%\n'
             base_idx += 1
-        if env.unit_type_bits > 0:
-            s += f'Unit: {unit_id[obs[base_idx]]}\n'
-            base_idx += 1
+        s += f'unit type : {get_ally_unit_type(env,env.agents[agent_id].unit_type)}\n'
+        base_idx += 1
         return s
 def get_obs_NL(env,obs_list):
-    return [get_obs_agent_NL(env,obs) for obs in obs_list]
+    return [get_obs_agent_NL(env,obs,i) for i,obs in enumerate(obs_list)]
